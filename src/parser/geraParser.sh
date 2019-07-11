@@ -1,0 +1,1 @@
+java -jar ../../tools/java-cup-11a.jar -package parser -parser Parser -symbols SymbolCodes expr.cup

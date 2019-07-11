@@ -1,0 +1,189 @@
+import java_cup.runtime.*;
+import erros.ListaErros;
+
+parser code
+{:
+    public void syntax_error(Symbol s){
+        defErro(s.left, s.right);
+    }
+
+    public void defErro(int linha, int coluna, String texto){
+        ((scanner.Scanner) getScanner()).defErro(linha,coluna,texto);
+    }
+
+    public void defErro(int linha, int coluna){
+        ((scanner.Scanner) getScanner()).defErro(linha,coluna);
+    }
+
+    public void defErro(String texto){
+        ((scanner.Scanner) getScanner()).defErro(texto);
+    }
+:};
+
+terminal KW_PROGRAM, KW_CLASS, KW_IF, KW_ELSE, KW_WHILE, KW_READ, KW_VOID, KW_FINAL, KW_NEW;
+terminal IDENT;
+terminal MAIS, MENOS, MULT, DIV, MOD;
+terminal ATRIB, PTVIRG, VIRG, PONTO;
+terminal OP_RELACIONAL;
+terminal ABREPAR, FECHAPAR, ABRECOL, FECHACOL, ABRECHAVE, FECHACHAVE;
+terminal INTEIRO;
+
+non terminal program, program2, declaracao, constante, variavel, variavel2, classe, classe2;
+non terminal methodDecl, methodDecl2, methodDecl3, tipo, tipo2;
+non terminal block, block2, formPars, formPars2, statement, statement2, statement3;
+non terminal condicao, designador, designador2, actPars, actPars2, actPars3, expr, expr2, expr3;
+non terminal relop, termo, termo2, fator, fator2, fator3, mulop, addop;
+
+precedence left KW_ELSE;
+
+
+program ::= 
+    KW_PROGRAM IDENT declaracao ABRECHAVE program2 FECHACHAVE
+    | error {: parser.defErro("erro na declaracao do programa"); :};
+
+declaracao ::=
+    constante declaracao
+    | variavel declaracao
+    | classe declaracao
+    | ;
+
+program2 ::=
+    methodDecl program2
+    | ;
+
+constante ::=
+    KW_FINAL tipo IDENT ATRIB INTEIRO PTVIRG;
+
+variavel ::=
+    tipo IDENT variavel2 PTVIRG
+    | error {: parser.defErro("erro na declaracao da variavel"); :};
+
+variavel2 ::=
+    VIRG IDENT variavel2 
+    | ;
+
+classe ::= 
+    KW_CLASS IDENT ABRECHAVE classe2 FECHACHAVE;
+
+classe2 ::=
+    variavel classe2
+    | ;
+
+methodDecl ::=
+    tipo IDENT ABREPAR methodDecl2 FECHAPAR methodDecl3 block
+    | KW_VOID IDENT ABREPAR methodDecl2 FECHAPAR methodDecl3 block
+    | error {: parser.defErro("erro na declaracao do metodo"); :};
+
+methodDecl2 ::=
+    formPars
+    | ;
+
+methodDecl3 ::= 
+    variavel methodDecl3
+    | ;
+
+formPars ::=
+    tipo IDENT formPars2;
+
+formPars2 ::=
+    VIRG formPars
+    | ;
+
+tipo ::=
+    IDENT tipo2;
+
+tipo2 ::=
+    ABRECOL FECHACOL
+    | ;
+
+block ::=
+    ABRECHAVE block2 FECHACHAVE;
+
+block2 ::=
+    statement block2
+    | ;
+
+statement ::=
+    designador statement2 PTVIRG
+    | KW_IF ABREPAR condicao FECHAPAR statement statement3
+    | KW_WHILE ABREPAR condicao FECHAPAR statement
+    | KW_READ ABREPAR designador FECHAPAR PTVIRG
+    | block
+    | PTVIRG
+    | KW_IF ABREPAR error {: parser.defErro("erro na estrutura if"); :}FECHAPAR statement statement3
+    | KW_WHILE ABREPAR error {: parser.defErro("erro na estrutura while"); :} FECHAPAR statement
+    | KW_READ ABREPAR error {: parser.defErro("erro na leitura do read"); :} FECHAPAR PTVIRG;
+
+statement2 ::=
+    ATRIB expr 
+    | actPars;
+
+statement3 ::=
+    KW_ELSE statement
+    | ;
+
+actPars ::=
+    ABREPAR actPars2 FECHAPAR;
+
+actPars2 ::=
+    expr actPars3
+    | ;
+
+actPars3 ::=
+    VIRG actPars2 
+    | ;
+
+condicao ::=
+    expr relop expr;
+
+relop ::=
+    OP_RELACIONAL;
+
+expr ::=
+    expr2 termo expr3;
+
+expr2 ::=
+    MENOS 
+    | ;
+
+expr3 ::=
+    addop termo expr3
+    | ;
+
+termo ::=
+    fator termo2;
+
+termo2 ::=
+    mulop termo
+    | ;
+
+fator ::=
+    designador fator2
+    |INTEIRO
+    |KW_NEW IDENT fator3
+    |ABREPAR expr FECHAPAR;
+
+fator2 ::=
+    actPars
+    | ;
+
+fator3 ::=
+    ABRECOL expr FECHACOL
+    | ;
+
+designador ::=
+    IDENT designador2;
+
+designador2 ::=
+    PONTO IDENT designador2
+    | ABRECOL expr FECHACOL designador2
+    | ;
+
+addop ::=
+    MAIS
+    | MENOS;
+
+mulop ::=
+    MULT
+    | DIV
+    | MOD;
